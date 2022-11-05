@@ -7,6 +7,7 @@ import { ShadowMapViewer } from 'three/addons/utils/ShadowMapViewer.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let camera, scene, renderer, clock, stats;
+const mixers = [];
 let dirLight, spotLight;
 let torusKnot, cube;
 let dirLightShadowMapViewer, spotLightShadowMapViewer;
@@ -40,7 +41,7 @@ function initScene() {
     spotLight = new THREE.SpotLight( 0xffffff );
     spotLight.name = 'Spot Light';
     spotLight.angle = Math.PI / 5;
-    spotLight.penumbra = 0.3;
+    spotLight.penumbra = 0.2;
     spotLight.position.set( 10, 10, 5 );
     spotLight.castShadow = true;
     spotLight.shadow.camera.near = 8;
@@ -53,9 +54,9 @@ function initScene() {
 
     dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
     dirLight.name = 'Dir. Light';
-    dirLight.position.set( 0, 10, 0 );
+    dirLight.position.set( 0, 50, 0 );
     dirLight.castShadow = true;
-    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.near = 5;
     dirLight.shadow.camera.far = 10;
     dirLight.shadow.camera.right = 15;
     dirLight.shadow.camera.left = - 15;
@@ -82,14 +83,14 @@ function initScene() {
     torusKnot.receiveShadow = true;
     scene.add( torusKnot );
 
-    geometry = new THREE.BoxGeometry( 3, 3, 3 );
-    cube = new THREE.Mesh( geometry, material );
-    cube.position.set( 8, 3, 8 );
-    cube.castShadow = true;
-    cube.receiveShadow = true;
-    scene.add( cube );
+    // geometry = new THREE.BoxGeometry( 3, 3, 3 );
+    // cube = new THREE.Mesh( geometry, material );
+    // cube.position.set( 8, 3, 8 );
+    // cube.castShadow = true;
+    // cube.receiveShadow = true;
+    // scene.add( cube );
 
-    geometry = new THREE.BoxGeometry( 10, 0.15, 10 );
+    geometry = new THREE.BoxGeometry( 30, 0.15, 30 );
     material = new THREE.MeshPhongMaterial( {
         color: 0xa0adaf,
         shininess: 150,
@@ -101,6 +102,50 @@ function initScene() {
     ground.castShadow = false;
     ground.receiveShadow = true;
     scene.add( ground );
+
+
+    // MODEL
+
+    const loader = new GLTFLoader();
+    loader.load( 'models/gltf/Flamingo.glb', function ( gltf ) {
+        const mesh = gltf.scene.children[ 0 ];
+
+        const s = 0.025;
+        mesh.scale.set( s, s, s );
+        mesh.position.x = -15;
+        mesh.position.y = 5;
+        mesh.rotation.y = - 1;
+
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+
+        scene.add( mesh );
+
+        const mixer = new THREE.AnimationMixer( mesh );
+        mixer.clipAction( gltf.animations[ 0 ] ).setDuration( 1 ).play();
+        mixers.push( mixer );
+
+    } );
+
+
+    // SKYDOME
+    const vertexShader = document.getElementById( 'vertexShader' ).textContent;
+    const fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
+    const uniforms = {
+        'topColor': { value: new THREE.Color( 0x0077ff ) },
+        'bottomColor': { value: new THREE.Color( 0xffffff ) },
+        'offset': { value: 33 },
+        'exponent': { value: 0.6 }
+    };
+    const skyGeo = new THREE.SphereGeometry( 20, 32, 15 );
+    const skyMat = new THREE.ShaderMaterial( {
+        uniforms: uniforms,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        side: THREE.BackSide
+    } );
+    const sky = new THREE.Mesh( skyGeo, skyMat );
+    scene.add( sky );
 
 }
 
@@ -188,15 +233,21 @@ function render() {
     const delta = clock.getDelta();
 
     renderScene();
-    renderShadowMapViewers();
+    // renderShadowMapViewers();
 
     torusKnot.rotation.x += 0.25 * delta;
     torusKnot.rotation.y += 2 * delta;
     torusKnot.rotation.z += 1 * delta;
 
-    cube.rotation.x += 0.25 * delta;
-    cube.rotation.y += 2 * delta;
-    cube.rotation.z += 1 * delta;
+    // cube.rotation.x += 0.25 * delta;
+    // cube.rotation.y += 2 * delta;
+    // cube.rotation.z += 1 * delta;
+
+    for ( let i = 0; i < mixers.length; i ++ ) {
+
+        mixers[ i ].update( delta );
+
+    }
 
     
 }
