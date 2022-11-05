@@ -5,9 +5,11 @@ import Stats from 'three/addons/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ShadowMapViewer } from 'three/addons/utils/ShadowMapViewer.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { ColladaLoader } from 'three/addons/loaders/ColladaLoader.js';
 
 let camera, scene, renderer, clock, stats;
 const mixers = [];
+const stormTrooper = [];
 let dirLight, spotLight;
 let torusKnot, cube;
 let dirLightShadowMapViewer, spotLightShadowMapViewer;
@@ -69,19 +71,19 @@ function initScene() {
     scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
 
     // Geometry
-    let geometry = new THREE.TorusKnotGeometry( 25, 7, 75, 10 );
-    let material = new THREE.MeshPhongMaterial( {
-        color: 0xff0000,
-        shininess: 150,
-        specular: 0x222222
-    } );
+    // let geometry = new THREE.TorusKnotGeometry( 25, 7, 75, 10 );
+    // let material = new THREE.MeshPhongMaterial( {
+    //     color: 0xff0000,
+    //     shininess: 150,
+    //     specular: 0x222222
+    // } );
 
-    torusKnot = new THREE.Mesh( geometry, material );
-    torusKnot.scale.multiplyScalar( 1 / 18 );
-    torusKnot.position.y = 3;
-    torusKnot.castShadow = true;
-    torusKnot.receiveShadow = true;
-    scene.add( torusKnot );
+    // torusKnot = new THREE.Mesh( geometry, material );
+    // torusKnot.scale.multiplyScalar( 1 / 18 );
+    // torusKnot.position.y = 3;
+    // torusKnot.castShadow = true;
+    // torusKnot.receiveShadow = true;
+    // scene.add( torusKnot );
 
     // geometry = new THREE.BoxGeometry( 3, 3, 3 );
     // cube = new THREE.Mesh( geometry, material );
@@ -90,8 +92,8 @@ function initScene() {
     // cube.receiveShadow = true;
     // scene.add( cube );
 
-    geometry = new THREE.BoxGeometry( 30, 0.15, 30 );
-    material = new THREE.MeshPhongMaterial( {
+    let geometry = new THREE.BoxGeometry( 30, 0.15, 30 );
+    let material = new THREE.MeshPhongMaterial( {
         color: 0xa0adaf,
         shininess: 150,
         specular: 0x111111
@@ -105,27 +107,22 @@ function initScene() {
 
 
     // MODEL
-
     const loader = new GLTFLoader();
     loader.load( 'models/gltf/Flamingo.glb', function ( gltf ) {
         const mesh = gltf.scene.children[ 0 ];
-
         const s = 0.025;
         mesh.scale.set( s, s, s );
         mesh.position.x = -15;
         mesh.position.y = 5;
         mesh.rotation.y = - 1;
-
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-
         scene.add( mesh );
-
         const mixer = new THREE.AnimationMixer( mesh );
         mixer.clipAction( gltf.animations[ 0 ] ).setDuration( 1 ).play();
         mixers.push( mixer );
-
     } );
+
 
 
     // SKYDOME
@@ -147,7 +144,27 @@ function initScene() {
     const sky = new THREE.Mesh( skyGeo, skyMat );
     scene.add( sky );
 
+
+
+
+    // Collada
+    const loader_c = new ColladaLoader();
+    loader_c.load( './models/collada/stormtrooper/stormtrooper.dae', function ( collada ) {
+        const avatar = collada.scene;
+        const animations = avatar.animations;
+        avatar.traverse( function ( node ) {
+            if ( node.isSkinnedMesh ) {
+                node.frustumCulled = false;
+            }
+        } );
+        const mixer = new THREE.AnimationMixer( avatar );
+        mixer.clipAction( animations[ 0 ] ).play();
+        stormTrooper.push( mixer );
+        scene.add( avatar );
+    } );
+
 }
+
 
 function initShadowMapViewers() {
 
@@ -235,19 +252,20 @@ function render() {
     renderScene();
     // renderShadowMapViewers();
 
-    torusKnot.rotation.x += 0.25 * delta;
-    torusKnot.rotation.y += 2 * delta;
-    torusKnot.rotation.z += 1 * delta;
-
+    // torusKnot.rotation.x += 0.25 * delta;
+    // torusKnot.rotation.y += 2 * delta;
+    // torusKnot.rotation.z += 1 * delta;
+    
     // cube.rotation.x += 0.25 * delta;
     // cube.rotation.y += 2 * delta;
     // cube.rotation.z += 1 * delta;
 
     for ( let i = 0; i < mixers.length; i ++ ) {
-
         mixers[ i ].update( delta );
-
     }
 
+    for ( let i = 0; i < stormTrooper.length; i ++ ) {
+        stormTrooper[ i ].update( 2*delta );
+    }
     
 }
