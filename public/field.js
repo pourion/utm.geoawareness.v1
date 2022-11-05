@@ -4,6 +4,7 @@ import Stats from 'three/addons/libs/stats.module.js';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ShadowMapViewer } from 'three/addons/utils/ShadowMapViewer.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let camera, scene, renderer, clock, stats;
 let dirLight, spotLight;
@@ -197,4 +198,5 @@ function render() {
     cube.rotation.y += 2 * delta;
     cube.rotation.z += 1 * delta;
 
+    
 }

@@ -5,11 +5,57 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<!-- <link type="text/css" rel="stylesheet" href="main.css"> -->
+		<!-- <style>
+			body {
+				background-color: #fff;
+				color: #444;
+			}
+			a {
+				color:#08f;
+			}
+		</style> -->
 	</head>
 	<body>
+		<div id="container"></div>
 		<div id="info">
-		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - ShadowMapViewer example by <a href="https://github.com/arya-s">arya-s</a>
+		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> </a>
 		</div>
+
+
+		<!-- The following shaders are for drone  -->
+		<script type="x-shader/x-vertex" id="vertexShader">
+
+			varying vec3 vWorldPosition;
+
+			void main() {
+
+				vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+				vWorldPosition = worldPosition.xyz;
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+			}
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentShader">
+			uniform vec3 topColor;
+			uniform vec3 bottomColor;
+			uniform float offset;
+			uniform float exponent;
+
+			varying vec3 vWorldPosition;
+
+			void main() {
+
+				float h = normalize( vWorldPosition + offset ).y;
+				gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+
+			}
+		</script>
+		<!-- The above shaders are for drone  -->
+
+
+
 
 		<!-- Import maps polyfill -->
 		<!-- Remove this when import maps will be widely supported -->
@@ -25,5 +71,6 @@
 		</script>
 
 		<script type="module" src="field.js"></script>
+		<!-- <script type="module" src="flamingo.js"></script> -->
 	</body>
 </html>
